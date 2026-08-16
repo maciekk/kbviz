@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+
+out*/
+sample-out/
+tmp-layout/
+
+.DS_Store
