@@ -144,26 +144,13 @@ Partial override layer:
 - Readability is prioritized over exact board dimensions.
 - Supported input forms are: directory, bare `keymap.c`, or ZSA source zip.
 - PNG export uses `inkscape`.
-- Without `--colorful`, overridden keys use a single green tint.
-- With `--colorful`, overridden keys get subtle category tints, including distinct colors for layer-operation keys and modifier keys.
+- By default, overridden keys use a single green tint. With `--colorful`, overridden keys use subtle category colors:
+  - green: regular keys
+  - blue: layer-operation keys
+  - purple: modifier keys
+  - red: keyboard/system-control keys
+  - yellow: media/mouse/web keys
 - Each image may include a Legend section for special constructs; it is generated per layer and only lists the special codes used on that image.
-- The parser is intentionally narrow and expects standard QMK layer entries such as:
-
-```c
-[QWERTY] = LAYOUT_ergodox_pretty(...)
-```
-
-or:
-
-```c
-[0] = LAYOUT_moonlander(...)
-```
-
-or:
-
-```c
-[0] = LAYOUT_voyager(...)
-```
 
 ## Viewing output
 
