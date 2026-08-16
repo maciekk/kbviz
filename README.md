@@ -37,6 +37,16 @@ Then view the results on macOS:
 ./view-svgs.sh out-moon
 ```
 
+## Example output
+
+Base layer (full map):
+
+![ErgoDox QWERTY layer](images/ergodox-qwerty.png)
+
+Partial override layer:
+
+![ErgoDox NUM layer](images/ergodox-num.png)
+
 ## Internal model
 
 The script does not render directly from raw `keymap.c` text.
