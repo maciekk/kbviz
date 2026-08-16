@@ -165,6 +165,20 @@ def is_transparent(token: str, defines: dict) -> bool:
     return resolve_alias(token, defines) in TRANSPARENT_TOKENS
 
 
+def mod_name(token: str) -> str:
+    names = {
+        "MOD_LCTL": "Ctrl",
+        "MOD_RCTL": "Ctrl",
+        "MOD_LSFT": "Shift",
+        "MOD_RSFT": "Shift",
+        "MOD_LALT": "Alt",
+        "MOD_RALT": "Alt",
+        "MOD_LGUI": "Gui",
+        "MOD_RGUI": "Gui",
+    }
+    return names.get(token, token)
+
+
 def compact_label(token: str, defines: dict) -> str:
     raw = resolve_alias(token, defines)
     compact = {
@@ -185,6 +199,8 @@ def classify_token(token: str, defines: dict) -> str:
     raw = resolve_alias(token, defines)
     if re.match(r"^(MO|OSL|TO|TG|DF|TT|LT)\(", token):
         return "layer"
+    if re.match(r"^MT\(([^,]+),\s*(.+)\)$", token):
+        return "modifier"
     if raw in {
         "KC_LCTL", "KC_RCTL", "KC_LEFT_CTRL", "KC_RIGHT_CTRL",
         "KC_LSFT", "KC_RSFT", "KC_LEFT_SHIFT", "KC_RIGHT_SHIFT",
@@ -224,6 +240,8 @@ def human_label(token: str, defines: dict) -> str:
         return "No"
     if m := re.match(r"^LT\(([^,]+),\s*(.+)\)$", token):
         return f"LT({m.group(1)},\n{human_label(m.group(2), defines)})"
+    if m := re.match(r"^MT\(([^,]+),\s*(.+)\)$", token):
+        return f"{mod_name(m.group(1))}\n{human_label(m.group(2), defines)}"
     if re.match(r"^(MO|OSL|TO|TG|DF|TT|LT)\(", token):
         return token
     if m := re.match(r"^TD\(DANCE_(\d+)\)$", token):
@@ -312,6 +330,14 @@ def human_label(token: str, defines: dict) -> str:
         "KC_WWW_HOME": "Web",
         "KC_WWW_SEARCH": "Search",
         "KC_MY_COMPUTER": "PC",
+        "QK_LLCK": "Lock",
+        "KC_MEDIA_PREV_TRACK": "Prev",
+        "KC_MEDIA_NEXT_TRACK": "Next",
+        "KC_MEDIA_STOP": "Stop",
+        "KC_MEDIA_PLAY_PAUSE": "Play",
+        "KC_AUDIO_VOL_UP": "Vol+",
+        "KC_AUDIO_VOL_DOWN": "Vol-",
+        "KC_AUDIO_MUTE": "Mute",
         "CW_TOGG": "Caps\nWord",
         "CW_TOGGLE": "Caps\nWord",
         "QK_AUDIO_ON": "Audio\nOn",
@@ -447,9 +473,26 @@ def moonlander_geometry(key_count: int) -> List[Key]:
     return geometry_from_layout(layout, key_count, 72, "Moonlander", "LAYOUT_moonlander")
 
 
+def voyager_geometry(key_count: int) -> List[Key]:
+    # Exact positions from QMK keyboards/zsa/voyager/keyboard.json (LAYOUT alias used by LAYOUT_voyager).
+    layout = [
+        (0, 0.5, 1, 1), (1, 0.5, 1, 1), (2, 0.25, 1, 1), (3, 0, 1, 1), (4, 0.25, 1, 1), (5, 0.5, 1, 1),
+        (10, 0.5, 1, 1), (11, 0.25, 1, 1), (12, 0, 1, 1), (13, 0.25, 1, 1), (14, 0.5, 1, 1), (15, 0.5, 1, 1),
+        (0, 1.5, 1, 1), (1, 1.5, 1, 1), (2, 1.25, 1, 1), (3, 1, 1, 1), (4, 1.25, 1, 1), (5, 1.5, 1, 1),
+        (10, 1.5, 1, 1), (11, 1.25, 1, 1), (12, 1, 1, 1), (13, 1.25, 1, 1), (14, 1.5, 1, 1), (15, 1.5, 1, 1),
+        (0, 2.5, 1, 1), (1, 2.5, 1, 1), (2, 2.25, 1, 1), (3, 2, 1, 1), (4, 2.25, 1, 1), (5, 2.5, 1, 1),
+        (10, 2.5, 1, 1), (11, 2.25, 1, 1), (12, 2, 1, 1), (13, 2.25, 1, 1), (14, 2.5, 1, 1), (15, 2.5, 1, 1),
+        (0, 3.5, 1, 1), (1, 3.5, 1, 1), (2, 3.25, 1, 1), (3, 3, 1, 1), (4, 3.25, 1, 1), (5, 3.5, 1, 1),
+        (10, 3.5, 1, 1), (11, 3.25, 1, 1), (12, 3, 1, 1), (13, 3.25, 1, 1), (14, 3.5, 1, 1), (15, 3.5, 1, 1),
+        (5, 4.5, 1, 1), (6, 4.75, 1, 1), (9, 4.75, 1, 1), (10, 4.5, 1, 1),
+    ]
+    return geometry_from_layout(layout, key_count, 52, "Voyager", "LAYOUT_voyager")
+
+
 KEYBOARD_SPECS = [
     KeyboardSpec(name="ErgoDox EZ", layout_macro="LAYOUT_ergodox_pretty", key_count=76, geometry_func=ergodox_geometry),
     KeyboardSpec(name="Moonlander", layout_macro="LAYOUT_moonlander", key_count=72, geometry_func=moonlander_geometry),
+    KeyboardSpec(name="Voyager", layout_macro="LAYOUT_voyager", key_count=52, geometry_func=voyager_geometry),
 ]
 
 
@@ -511,6 +554,8 @@ def legend_entries_for_layer(layer: Layer, defines: dict) -> List[Tuple[str, str
             item = ("LT(layer, key)", "hold for layer, tap for key")
         elif m := re.match(r"^TD\(DANCE_(\d+)\)$", token):
             item = (f"TD{m.group(1)}", f"tap dance {m.group(1)}")
+        elif re.match(r"^MT\(([^,]+),\s*(.+)\)$", token):
+            item = ("MT(mod, key)", "hold for modifier, tap for key")
         elif token in {"CW_TOGG", "CW_TOGGLE"}:
             item = ("Caps Word", "toggle Caps Word mode")
         elif token == "QK_BOOT":

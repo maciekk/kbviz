@@ -1,0 +1,6 @@
+0 QWERTY
+1 Dvorak
+2 Sym+Num
+3 Brd+Sys
+4 Nav
+5 Gaming

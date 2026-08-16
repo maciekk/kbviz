@@ -10,6 +10,7 @@ Current scope:
 
 - ErgoDox EZ via `LAYOUT_ergodox_pretty`
 - Moonlander via `LAYOUT_moonlander`
+- Voyager via `LAYOUT_voyager`
 - one image per layer
 - inherited keys shown in light gray
 - overridden keys highlighted and labeled
@@ -73,6 +74,7 @@ Included in this repo:
 
 - `inputs/ergodox/`
 - `inputs/moonlander/`
+- `inputs/voyager/`
 
 ## Output formats
 
@@ -155,6 +157,12 @@ or:
 
 ```c
 [0] = LAYOUT_moonlander(...)
+```
+
+or:
+
+```c
+[0] = LAYOUT_voyager(...)
 ```
 
 ## Viewing output
