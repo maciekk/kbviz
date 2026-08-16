@@ -227,7 +227,7 @@ def key_colors(token: str, defines: dict, overridden: bool, colorful: bool) -> T
         "layer": ("#dff4ff", "#3f96cc"),
         "modifier": ("#f8eeff", "#a14fc4"),
         "system": ("#ffdfe5", "#cf5f7b"),
-        "media": ("#fff5d8", "#d8c17a"),
+        "media": ("#fffea8", "#faf600"),
     }
     return palette.get(category, palette["default"])
 
