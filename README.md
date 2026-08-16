@@ -73,6 +73,19 @@ Bare `keymap.c`:
 python3 kbviz.py path/to/keymap.c -o out
 ```
 
+Format selection:
+
+- no flag: SVG only
+- `--svg`: SVG only
+- `--png`: PNG only
+- `--svg --png`: both SVG and PNG
+
+Example:
+
+```bash
+python3 kbviz.py inputs/ergodox -o out-ergo --svg --png
+```
+
 Directory mode (`keymap.c` plus optional `layer-names.txt` / `layer_names.json`):
 
 ```bash
@@ -132,6 +145,7 @@ If no layer-name sidecar is found, titles stay as `Layer: N` and filenames fall 
 - Readability is prioritized over exact board dimensions.
 - The parser is intentionally narrow: it expects standard QMK layer entries like:
 - Supported input forms are: directory, bare `keymap.c`, or ZSA source zip.
+- PNG export uses `inkscape`.
 
 ```c
 [QWERTY] = LAYOUT_ergodox_pretty(...)

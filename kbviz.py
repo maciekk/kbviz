@@ -3,6 +3,7 @@ import argparse
 import html
 import json
 import re
+import subprocess
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -631,11 +632,30 @@ def output_layer_filename(layer: Layer, layer_names: dict) -> str:
     return f"layer{layer.index}.svg"
 
 
+def export_png(svg_path: Path, png_path: Path) -> None:
+    subprocess.run(
+        [
+            "inkscape",
+            str(svg_path),
+            "--export-type=png",
+            f"--export-filename={png_path}",
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate one SVG per layer from a QMK keymap (ErgoDox EZ or Moonlander)")
-    parser.add_argument("keymap", help="Path to keymap.c or source zip")
+    parser = argparse.ArgumentParser(description="Generate layer images from a QMK keymap (ErgoDox EZ or Moonlander)")
+    parser.add_argument("keymap", help="Path to keymap.c, layout directory, or source zip")
     parser.add_argument("-o", "--out", default="out", help="Output directory (default: out)")
+    parser.add_argument("--svg", action="store_true", help="Output SVG files")
+    parser.add_argument("--png", action="store_true", help="Output PNG files")
     args = parser.parse_args()
+
+    want_svg = args.svg or not args.png
+    want_png = args.png
 
     keymap_path = Path(args.keymap)
     out_dir = Path(args.out)
@@ -649,9 +669,19 @@ def main() -> int:
     for layer in layers:
         legend = legend_entries_for_layer(layer, defines)
         svg = svg_for_layer(layer, geometry, defines, legend, layer_names)
-        filename = output_layer_filename(layer, layer_names)
-        (out_dir / filename).write_text(svg, encoding="utf-8")
-        print(out_dir / filename)
+        stem = Path(output_layer_filename(layer, layer_names)).stem
+        svg_path = out_dir / f"{stem}.svg"
+        png_path = out_dir / f"{stem}.png"
+        if want_svg or want_png:
+            svg_path.write_text(svg, encoding="utf-8")
+        if want_png:
+            export_png(svg_path, png_path)
+        if want_svg:
+            print(svg_path)
+        if want_png:
+            print(png_path)
+        if want_png and not want_svg and svg_path.exists():
+            svg_path.unlink()
     return 0
 
 
