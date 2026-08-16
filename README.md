@@ -106,18 +106,6 @@ Example output files:
 - with layer names: `out/00-QWERTY.svg`
 - without layer names: `out/layer0.svg`
 
-## Rendering behavior
-
-For inheritance, a key is treated as:
-
-- overridden if the layer entry is not transparent
-- inherited if the layer entry is transparent
-
-Inherited keys are drawn in light gray and left unlabeled.
-Overridden keys are highlighted and labeled.
-
-This means each layer image emphasizes the differences on that layer rather than re-documenting the entire base layout.
-
 ## Labeling
 
 Labels are normalized for readability.
@@ -155,7 +143,8 @@ Partial override layer:
 - Supported input forms are: directory, bare `keymap.c`, or ZSA source zip.
 - PNG export uses `inkscape`.
 - Without `--colorful`, overridden keys use a single green tint.
-- With `--colorful`, overridden keys get subtle category tints.
+- With `--colorful`, overridden keys get subtle category tints, including distinct colors for layer-operation keys and modifier keys.
+- Each image may include a Legend section for special constructs; it is generated per layer and only lists the special codes used on that image.
 - The parser is intentionally narrow and expects standard QMK layer entries such as:
 
 ```c
