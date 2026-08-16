@@ -181,6 +181,41 @@ def compact_label(token: str, defines: dict) -> str:
     return human_label(token, defines).replace("\n", " ")
 
 
+def classify_token(token: str, defines: dict) -> str:
+    raw = resolve_alias(token, defines)
+    if re.match(r"^(MO|OSL|TO|TG|DF|TT|LT)\(", token):
+        return "layer"
+    if raw in {
+        "KC_LCTL", "KC_RCTL", "KC_LEFT_CTRL", "KC_RIGHT_CTRL",
+        "KC_LSFT", "KC_RSFT", "KC_LEFT_SHIFT", "KC_RIGHT_SHIFT",
+        "KC_LALT", "KC_RALT", "KC_LEFT_ALT", "KC_RIGHT_ALT",
+        "KC_LGUI", "KC_RGUI", "KC_LEFT_GUI", "KC_RIGHT_GUI",
+        "SC_LSPO", "SC_RSPC",
+    }:
+        return "modifier"
+    if raw.startswith("RGB_") or raw.startswith("UG_") or raw in {"LED_LEVEL", "TOGGLE_LAYER_COLOR", "QK_BOOT", "QK_AUDIO_ON", "QK_AUDIO_OFF", "MU_TOGG", "CW_TOGG", "CW_TOGGLE"}:
+        return "system"
+    if raw.startswith("KC_MS_") or raw.startswith("MS_") or raw.startswith("KC_WWW_") or raw in {"KC_MY_COMPUTER", "KC_MPLY", "KC_MSTP", "KC_MPRV", "KC_MNXT", "KC_VOLU", "KC_VOLD", "KC_MUTE"}:
+        return "media"
+    return "default"
+
+
+def key_colors(token: str, defines: dict, overridden: bool, colorful: bool) -> Tuple[str, str]:
+    if not overridden:
+        return "#f6f7f2", "#d7dbd0"
+    if not colorful:
+        return "#d9ffde", "#7fd98c"
+    category = classify_token(token, defines)
+    palette = {
+        "default": ("#d9ffde", "#7fd98c"),
+        "layer": ("#dff4ff", "#3f96cc"),
+        "modifier": ("#f8eeff", "#a14fc4"),
+        "system": ("#ffdfe5", "#cf5f7b"),
+        "media": ("#fff5d8", "#d8c17a"),
+    }
+    return palette.get(category, palette["default"])
+
+
 def human_label(token: str, defines: dict) -> str:
     raw = resolve_alias(token, defines)
     if raw in TRANSPARENT_TOKENS:
@@ -490,7 +525,7 @@ def legend_entries_for_layer(layer: Layer, defines: dict) -> List[Tuple[str, str
     return entries
 
 
-def svg_for_layer(layer: Layer, keys: List[Key], defines: dict, legend: List[Tuple[str, str]], layer_names: dict) -> str:
+def svg_for_layer(layer: Layer, keys: List[Key], defines: dict, legend: List[Tuple[str, str]], layer_names: dict, colorful: bool) -> str:
     legend_h = 0 if not legend else 34 + len(legend) * 18
     width = int(max(k.x + k.w for k in keys) + MARGIN)
     height = int(max(k.y + k.h for k in keys) + MARGIN + 30 + legend_h)
@@ -502,8 +537,7 @@ def svg_for_layer(layer: Layer, keys: List[Key], defines: dict, legend: List[Tup
 
     for key, token in zip(keys, layer.keys):
         overridden = not is_transparent(token, defines)
-        fill = "#d9ffde" if overridden else "#f6f7f2"
-        stroke = "#7fd98c" if overridden else "#d7dbd0"
+        fill, stroke = key_colors(token, defines, overridden, colorful)
         parts.append(
             f'<rect x="{key.x:.1f}" y="{key.y:.1f}" width="{key.w}" height="{key.h}" rx="8" ry="8" fill="{fill}" stroke="{stroke}" stroke-width="1.6"/>'
         )
@@ -652,6 +686,7 @@ def main() -> int:
     parser.add_argument("-o", "--out", default="out", help="Output directory (default: out)")
     parser.add_argument("--svg", action="store_true", help="Output SVG files")
     parser.add_argument("--png", action="store_true", help="Output PNG files")
+    parser.add_argument("--colorful", action="store_true", help="Use subtle category colors for overridden keys")
     args = parser.parse_args()
 
     want_svg = args.svg or not args.png
@@ -668,7 +703,7 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     for layer in layers:
         legend = legend_entries_for_layer(layer, defines)
-        svg = svg_for_layer(layer, geometry, defines, legend, layer_names)
+        svg = svg_for_layer(layer, geometry, defines, legend, layer_names, args.colorful)
         stem = Path(output_layer_filename(layer, layer_names)).stem
         svg_path = out_dir / f"{stem}.svg"
         png_path = out_dir / f"{stem}.png"

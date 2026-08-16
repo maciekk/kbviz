@@ -80,10 +80,15 @@ Format selection:
 - `--png`: PNG only
 - `--svg --png`: both SVG and PNG
 
+Optional styling:
+
+- `--colorful`: use subtle category colors for overridden keys
+
 Example:
 
 ```bash
 python3 kbviz.py inputs/ergodox -o out-ergo --svg --png
+python3 kbviz.py inputs/ergodox -o out-ergo-color --colorful
 ```
 
 Directory mode (`keymap.c` plus optional `layer-names.txt` / `layer_names.json`):
@@ -146,6 +151,8 @@ If no layer-name sidecar is found, titles stay as `Layer: N` and filenames fall 
 - The parser is intentionally narrow: it expects standard QMK layer entries like:
 - Supported input forms are: directory, bare `keymap.c`, or ZSA source zip.
 - PNG export uses `inkscape`.
+- Without `--colorful`, overridden keys use a single green tint.
+- With `--colorful`, overridden keys get subtle category tints (for example layer keys, modifiers, and system/media keys).
 
 ```c
 [QWERTY] = LAYOUT_ergodox_pretty(...)
