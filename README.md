@@ -1,8 +1,8 @@
 # kbviz
 
-Very small Python tool for visualizing QMK keyboard layers as SVGs.
+Small Python tool for visualizing QMK keyboard layers as SVG or PNG images.
 
-It is aimed at personal layout documentation/review, with an emphasis on answering:
+The goal is practical layout documentation and review, especially for answering:
 
 > What changed on this layer?
 
@@ -10,11 +10,11 @@ Current scope:
 
 - ErgoDox EZ via `LAYOUT_ergodox_pretty`
 - Moonlander via `LAYOUT_moonlander`
-- one SVG per layer
+- one image per layer
 - inherited keys shown in light gray
 - overridden keys highlighted and labeled
 
-This is intentionally **not** a framework.
+This is intentionally not a framework.
 
 ## Quick start
 
@@ -30,106 +30,28 @@ Render the included Moonlander input directory:
 python3 kbviz.py inputs/moonlander -o out-moon
 ```
 
-Then view the results on macOS:
+## Inputs
 
-```bash
-./view-svgs.sh out-ergo
-./view-svgs.sh out-moon
-```
+`kbviz.py` accepts three input forms:
 
-## Example output
-
-Base layer (full map):
-
-![ErgoDox QWERTY layer](images/ergodox-qwerty.png)
-
-Partial override layer:
-
-![ErgoDox NUM layer](images/ergodox-num.png)
-
-## Internal model
-
-The script does not render directly from raw `keymap.c` text.
-
-It does this instead:
-
-1. parse `keymap.c`
-2. build a tiny in-memory model: `Layer(name, keys)`
-3. render that model to SVG using hard-coded keyboard geometry
-
-For inheritance, a key is treated as:
-
-- **overridden** if the layer entry is not transparent
-- **inherited** if the layer entry is transparent
-
-Inherited keys are drawn in light gray and left unlabeled.
-Overridden keys are highlighted and labeled.
-
-## Usage
-
-Bare `keymap.c`:
-
-```bash
-python3 kbviz.py path/to/keymap.c -o out
-```
-
-Format selection:
-
-- no flag: SVG only
-- `--svg`: SVG only
-- `--png`: PNG only
-- `--svg --png`: both SVG and PNG
-
-Optional styling:
-
-- `--colorful`: use subtle category colors for overridden keys
-
-Example:
-
-```bash
-python3 kbviz.py inputs/ergodox -o out-ergo --svg --png
-python3 kbviz.py inputs/ergodox -o out-ergo-color --colorful
-```
-
-Directory mode (`keymap.c` plus optional `layer-names.txt` / `layer_names.json`):
-
-```bash
-python3 kbviz.py path/to/layout-dir -o out
-```
-
-ZSA source zip:
-
-```bash
-python3 kbviz.py path/to/source.zip -o out
-```
-
-Example output files:
-
-- with layer names: `out/00-QWERTY.svg`
-- without layer names: `out/layer0.svg`
-
-The repo includes two input directories ready to use:
-
-- `inputs/ergodox/`
-- `inputs/moonlander/`
-
-## Label behavior
+- bare `keymap.c`
+- a directory containing `keymap.c`
+- a ZSA source zip containing `keymap.c`
 
 Examples:
 
-- `KC_PGUP` -> `PgUp`
-- `KC_HOME` -> `Home`
-- `KC_LEFT` -> `←`
-- `KC_F5` -> `F5`
-- `KC_P7` / `KC_KP_7` -> `7` + `(KP)`
-- `MO(3)` / `OSL(4)` / `TO(1)` / `LT(3, KC_TAB)` stay explicit
+```bash
+python3 kbviz.py path/to/keymap.c -o out
+python3 kbviz.py path/to/layout-dir -o out
+python3 kbviz.py path/to/source.zip -o out
+```
 
-Unknown or custom expressions fall back to the original token.
-
-Layer names can be provided in either:
+When using a directory or zip, layer names can be provided via sidecar files:
 
 - `layer-names.txt`
 - `layer_names.json`
+
+A bare `keymap.c` can also use an adjacent sidecar file with either of those names.
 
 Example `layer-names.txt`:
 
@@ -142,17 +64,99 @@ Example `layer-names.txt`:
 5 KBD
 ```
 
-If no layer-name sidecar is found, titles stay as `Layer: N` and filenames fall back to `layerN.svg`.
+If no sidecar layer-name file is found:
+
+- image titles stay as `Layer: N`
+- filenames fall back to `layerN.svg` / `layerN.png`
+
+Included in this repo:
+
+- `inputs/ergodox/`
+- `inputs/moonlander/`
+
+## Output formats
+
+Flags:
+
+- `--png` generates PNG
+- `--svg` generates SVG
+- more than one flag may be specified
+- if no format flag is given, output defaults to SVG
+
+Examples:
+
+```bash
+python3 kbviz.py inputs/ergodox -o out
+python3 kbviz.py inputs/ergodox -o out --png
+python3 kbviz.py inputs/ergodox -o out --svg --png
+```
+
+Optional styling:
+
+- `--colorful` uses subtle category colors for overridden keys
+
+Example:
+
+```bash
+python3 kbviz.py inputs/ergodox -o out-ergo-color --colorful
+```
+
+Example output files:
+
+- with layer names: `out/00-QWERTY.svg`
+- without layer names: `out/layer0.svg`
+
+## Rendering behavior
+
+For inheritance, a key is treated as:
+
+- overridden if the layer entry is not transparent
+- inherited if the layer entry is transparent
+
+Inherited keys are drawn in light gray and left unlabeled.
+Overridden keys are highlighted and labeled.
+
+This means each layer image emphasizes the differences on that layer rather than re-documenting the entire base layout.
+
+## Labeling
+
+Labels are normalized for readability.
+
+Examples:
+
+- navigation keys become short labels such as `PgUp`, `PgDn`, `Home`, `End`
+- arrow keys use arrows: `←`, `→`, `↑`, `↓`
+- keypad digits/operators are compacted, for example `7` with `(KP)` on a second line
+- long special labels may be split across two lines when needed
+
+Layer operations remain explicit so they can still be translated back into QMK/Oryx directly:
+
+- `MO(3)`
+- `OSL(4)`
+- `TO(1)`
+- `LT(3, KC_TAB)`
+
+Unknown or custom expressions fall back to the original token.
+
+## Example output
+
+Base layer (full map):
+
+![ErgoDox QWERTY layer](images/ergodox-qwerty.png)
+
+Partial override layer:
+
+![ErgoDox NUM layer](images/ergodox-num.png)
 
 ## Notes
 
 - Geometry is based on QMK layout data and is intended to be visually accurate.
 - Readability is prioritized over exact board dimensions.
-- The parser is intentionally narrow: it expects standard QMK layer entries like:
 - Supported input forms are: directory, bare `keymap.c`, or ZSA source zip.
 - PNG export uses `inkscape`.
 - Without `--colorful`, overridden keys use a single green tint.
-- With `--colorful`, overridden keys get subtle category tints (for example layer keys, modifiers, and system/media keys).
+- With `--colorful`, overridden keys get subtle category tints.
+- The parser is intentionally narrow and expects standard QMK layer entries such as:
 
 ```c
 [QWERTY] = LAYOUT_ergodox_pretty(...)
@@ -164,21 +168,24 @@ or:
 [0] = LAYOUT_moonlander(...)
 ```
 
-## Viewing SVGs on macOS
+## Viewing output
 
-Open one file:
+Any app or browser that can display SVG or PNG files should work.
+
+Examples:
 
 ```bash
-open -a Safari out/00-QWERTY.svg
+open out/00-QWERTY.svg
+open out/00-QWERTY.png
 ```
 
-Open all generated SVGs with your macOS default browser:
+This repo also includes a small helper for opening all SVGs in a browser on macOS:
 
 ```bash
 ./view-svgs.sh out
 ```
 
-Choose a different app explicitly:
+Or with an explicit app:
 
 ```bash
 SVG_APP=Firefox ./view-svgs.sh out
